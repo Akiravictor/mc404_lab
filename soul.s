@@ -112,11 +112,11 @@ _start:
         ldr r1,=DR
         ldr r3,[r1]
         
-      @Inicializa o Vetor do set_alarm
+      @Inicializa o Vetor do add_alarm
       ldr r1, =Alarmes
       mov r2, #tamanho_vetor
       
-      reset_alarmes:
+      readd_alarmes:
           mov r3, #0
           str r3, [r1]
     
@@ -124,7 +124,7 @@ _start:
           sub r2, r2, #4
     
           cmp r2, #0
-      bne reset_alarmes
+      bne readd_alarmes
      
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TZIC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     
       @ Constantes para os enderecos do TZIC
@@ -302,7 +302,7 @@ _start:
             beq set_time
             
         cmp r7, #13
-            beq set_alarm
+            beq add_alarm
         
           movs pc,lr        
 
@@ -459,7 +459,7 @@ _start:
         ldmfd sp!, {r4-r11, lr}
         movs pc,lr 
 
-    set_alarm:
+    add_alarm:
       stmfd sp!, {r4-r11,lr}               @ Save the callee-save registers
 
       @mudando usuário antes 
@@ -487,7 +487,7 @@ _start:
             ldmfd sp!, {r4-r11, lr}
             movs pc,lr       
 
-        Testa_tempo:                @adicionar um bit para verificar se o alarme foi ou não ativado;
+        Testa_tempo:					@adicionar um bit para verificar se o alarme foi ou não ativado;
             cmp r1,r3                   @tempo do alarme é maior que o tempo de sistema
             bhi adicionaAlarme
 
@@ -526,7 +526,7 @@ _start:
        ldmfd sp!, {r4-r11, lr}
         movs pc,lr 
                 
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@2
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 @@@@@@seção de dados?
 .data

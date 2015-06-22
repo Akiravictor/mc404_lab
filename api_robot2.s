@@ -4,7 +4,7 @@
 	.global set_motors_speed
 	.global read_sonar
 	.global read_sonars
-	.global set_alarm
+	.global add_alarm
 	.global get_time
 	.global set_time
    
@@ -14,6 +14,7 @@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@			MOTORS			@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 
 set_motor_speed:
 	stmfd sp!, {r4-r6, r10-r11, lr} @ Save the callee-save registers
@@ -76,13 +77,12 @@ set_motors_speed:
         
         cmp r0,#15
         bls saida
-        
+        @ If sonar_id is higher than 15, return -1 (Invalid sonar_id)
         mov r0,#-1
-        
         ldmfd sp!, {r4-r6, r10-r11, pc}
 
         saida:
-            mov r7, #8            @ Identifica a syscall 125 (read_sonar).
+            mov r7, #8            @ Make syscall.
             svc 0x0                  
             
         ldmfd sp!, {r4-r6, r10-r11, pc}
@@ -91,22 +91,21 @@ set_motors_speed:
 @@			SYSTEM			@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    set_alarm:
+    add_alarm:
         stmfd sp!, {r4-r6, r10-r11, lr}
         mov r7, #13
         svc 0x0
             
         ldmfd sp!, {r4-r6, r10-r11, pc}
-    
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+   
     get_time:
         stmfd sp!, {r4-r6, r10-r11, lr}
         mov r7, #11
         svc 0x0
             
         ldmfd sp!, {r4-r6, r10-r11, pc}
-    
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -116,4 +115,3 @@ set_motors_speed:
         svc 0x0
             
         ldmfd sp!, {r4-r6, r10-r11, pc}
-
