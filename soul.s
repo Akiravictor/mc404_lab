@@ -114,7 +114,7 @@ _start:
       ldr r1, =Alarmes
       mov r2, #tamanho_vetor
       
-      readd_alarmes:
+      reset_alarmes:
           mov r3, #0
           str r3, [r1]
     
@@ -122,7 +122,7 @@ _start:
           sub r2, r2, #4
     
           cmp r2, #0
-      bne readd_alarmes
+      bne reset_alarmes
      
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TZIC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@     
       @ Constantes para os enderecos do TZIC
