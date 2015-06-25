@@ -4,7 +4,7 @@
 	.global set_motors_speed
 	.global read_sonar
 	.global read_sonars
-	.global set_alarm
+	.global add_alarm
 	.global get_time
 	.global set_time
    
@@ -72,42 +72,52 @@ set_motors_speed:
 @@			SONARES			@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    read_sonar:
-        stmfd sp!, {r4-r6, r10-r11, lr}
+read_sonar:
+    stmfd sp!, {r4-r6, r10-r11, lr}
         
-        cmp r0,#15
-        bls saida
-        
-        mov r0,#-1
-        
-        ldmfd sp!, {r4-r6, r10-r11, pc}
+    cmp r0,#15
+    bls saida
+    @ If sonar_id is higher than 15, return -1 (Invalid sonar_id)
+    mov r0,#-1
+    ldmfd sp!, {r4-r6, r10-r11, pc}
 
-        saida:
-            mov r7, #8            @ Identifica a syscall 125 (read_sonar).
-            svc 0x0                  
-            
-        ldmfd sp!, {r4-r6, r10-r11, pc}
+	saida:
+		mov r7, #8				@ Make syscall.
+		svc 0x0
+
+	ldmfd sp!, {r4-r6, r10-r11, pc}
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+read_sonars:
+	stmfd sp!, {r4-r11, lr}
+	
+	mov r1, r0					@ Save the head of vector
+	mov r2, #0					@ Counter
+
+
+
+
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 @@			SYSTEM			@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    set_alarm:
+    add_alarm:
         stmfd sp!, {r4-r6, r10-r11, lr}
         mov r7, #13
         svc 0x0
             
         ldmfd sp!, {r4-r6, r10-r11, pc}
-    
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+   
     get_time:
         stmfd sp!, {r4-r6, r10-r11, lr}
         mov r7, #11
         svc 0x0
             
         ldmfd sp!, {r4-r6, r10-r11, pc}
-    
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -117,4 +127,3 @@ set_motors_speed:
         svc 0x0
             
         ldmfd sp!, {r4-r6, r10-r11, pc}
-
