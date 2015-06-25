@@ -60,14 +60,7 @@ _start:
 
         ldr r1,=GPT_IR
         mov r2,#1       
-        str r2,[r1]             
-    
-    @registradores do periférico
-    .set DR,    0x53F84000
-    .set GDIR,  0x53F84004
-    .set PSR ,  0x53F84000
-    
-
+        str r2,[r1]            
     
 @@@@@@@@@@@@ setando a bateria @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -95,7 +88,12 @@ _start:
 
     ldr sp, =PILHA_USER
     
+@registradores do periférico
+    .set DR,    0x53F84000
+    .set GDIR,  0x53F84004
+    .set PSR ,  0x53F84008
     
+
 @ Configurando o GPIO 
         @configurando os pinos de entrada e saída 
         ldr r1, =GDIR
