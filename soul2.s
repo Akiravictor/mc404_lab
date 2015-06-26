@@ -16,7 +16,7 @@ _start:
 .org 0x100
 .text
 
-@@@@@@	RESET HANDLER	@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ RESET HANDLER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 RESET_HANDLER:
 
@@ -59,11 +59,11 @@ RESET_HANDLER:
 	mov r2,#1       
 	str r2,[r1]
 
-@@@@@@	Pilha do Supervisor	@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Pilha do Supervisor @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 	ldr sp, =PILHA_SUDO
 
-@@@@@@ Pilha do IRQ	@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Pilha do IRQ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 @ CONFIGURA MODO IRQ
     mrs r0, CPSR
@@ -73,7 +73,7 @@ RESET_HANDLER:
 
     ldr sp, =PILHA_IRQ    
 
-@@@@@@	Pilha do Usuário	@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Pilha do Usuário @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 @ CONFIGURA MODO SYSTEM(USER)
 @ sp do modo SYSTEM e do modo USER eh o mesmo
@@ -118,7 +118,7 @@ reset_alarmes:
 	cmp r2, #0
 	bne reset_alarmes
 
-@@@@@@	TZIC	@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ TZIC @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 @ Constantes para os enderecos do TZIC
 
@@ -171,7 +171,7 @@ SET_TZIC:
 	ldr r0, =user
 	bx r0
          
-@@@@@@	IRQ HANDLER	@@@@@@
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ IRQ HANDLER @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
 IRQ_HANDLER:
 
@@ -210,24 +210,24 @@ Verifica_alarmes:
 	b Sai_irq_handler
 
 ChamaAlarme:  
-	stmfd sp!, {lr}              @ Save the callee-save registers
+	stmfd sp!, {lr}
 
-@carrego o tempo do alarme
+@carrega o tempo do alarme
 	add r3, r3,#4   
 	ldr r4, [r3]
 
-@Comparo codel m o tempo do sistema; sendo menor ou igual, eu chamo a função do alarme
+@Compara codel m o tempo do sistema; sendo menor ou igual, eu chamo a função do alarme
 	cmp r4,r0
 	bls ChamaFuncaoDoAlarme
 
-@retorno o fluxo do programa para o #Verifica_alarmes
+@retorna o fluxo do programa para o Verifica_alarmes
 	ldmfd sp!, {lr}
 	mov pc,lr 
 
 ChamaFuncaoDoAlarme:
 	stmfd sp!, {lr}
 
-@ajusto o contador de alarmes
+@ajusta o contador de alarmes
 	sub r1,r1,#1
 	ldr r2, =NumAlarmes
 	str r1, [r2]
@@ -238,7 +238,7 @@ ChamaFuncaoDoAlarme:
 	sub r2,r2,#4
 	str r1,[r2]
 
-@transfiro o fluxo do programa para a função
+@transfere o fluxo do programa para a função
 	add r3,r3,#4
 	stmfd sp!, {r6}
 
@@ -249,7 +249,7 @@ ChamaFuncaoDoAlarme:
 	mov r7,#6
 	svc 0x0
 
-@retorno o flixo de programa para o #ChamaAlarme
+@retorna o fluxo de programa para o #ChamaAlarme
 	add r3,r3,#4 @ajusta o endereço para verificar o número de validação;
 
 	ldmfd sp!, {lr}
@@ -263,3 +263,237 @@ Sai_irq_handler:
 
 	.set MAX_ALARMES, 16
 	.set tamanho_vetor, 16
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Syscalls @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+SYS_CALL:
+
+	cmp r7,#6
+	beq sudo
+
+	cmp r7, #8
+	beq read_sonar
+
+	cmp r7, #9
+	beq set_motor_speed
+
+	cmp r7, #10
+	beq set_motors_speed
+
+	cmp r7, #11
+	beq get_time
+
+	cmp r7, #12
+	beq set_time
+
+	cmp r7, #13
+	beq add_alarm
+
+	movs pc,lr
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Syscall Methods @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+sudo:
+
+	mov r6,#0x12
+	msr CPSR_c,r6
+	ldmfd sp!,{r6}
+	mov pc, lr
+
+	set_motor_speed:
+		stmfd sp!, {r4-r11}
+		stmfd sp!, {lr}
+
+		msr  CPSR_c, #0x13
+
+		@ r1 guarda a velocidade a ser setada no motor0
+		@ r2 guarda o endereço do PSR
+		@ r3 guarda o valor do PSR
+		@ r4 é auxiliar; 
+
+		ldr r2, =DR
+		ldr r3, [r2]
+              
+		cmp r0,#1 @verifica qual motor foi ativado              
+		beq motor1
+		motor0:           @dir
+			ldr r6,=0xFE03FFFF
+			mov r7,#19
+			b ligarMotor
+		motor1:           @esq
+			ldr r6,=0x01FFFFFF
+			mov r7,#26          
+
+		ligarMotor:
+			and r4,r3,r6                  @ é zerado, e o novo mapa é guardado em r4
+			lsl r1,r7
+			orr  r3,r4,r1                 @ Guarda em r3 o valor do sinal a ser enviado à placa;
+			ldr r2, =DR
+			str r3, [r2]                  @salva a velocidade no registrador;
+			ldmfd sp!, {r4-r11}
+			movs pc,lr       
+        
+	motors_speed:
+		stmfd sp!, {r4-r11,lr}
+		msr  CPSR_c, #0x13
+		
+		ldr r2,=DR
+		ldr r3, [r2]
+		
+		ligarMotores:
+			ldr r6,=0x0003FFFF 
+			and r4,r3,r6				@ é zerado, e o novo mapa é guardado em r4
+
+			mov r5, r0, lsl #26         @ coloca o valor da velocidade do motor 0 na posição de alteração de velocidade  
+			mov r6, r1,lsl #19			@ coloca o valor da velocidade na posição de alteração de velocidade do motor1
+			orr r5, r5, r6
+			orr r3, r4, r5				@ Guarda em r3 o valor do sinal a ser enviado à placa;
+    
+			ldr r2, =DR
+			str r3, [r2]			    @salva a velocidade no registrador;  
+
+			ldmfd sp!, {r4-r11, lr}
+			movs pc,lr 
+            
+	read_sonar: 
+		stmfd sp!, {r4-r11, lr}
+		msr  CPSR_c, #0x13
+		@guardando o sonar_id (r0) no sonar_mux          
+		ldr r2,=DR
+		ldr r3, [r2]
+		ldr r6, =0xFFFFFFC3              
+		and r4, r3, r6                  @ é zerado, e o novo mapa é guardado em r4
+		mov r0, r0 , lsl #2             @ coloca o valor do sonar_id locomovido 2 
+		orr r3, r4, r0                  @ Guarda em r3 o valor do sinal a ser enviado à placa;
+		str r3, [r2]    
+          
+		@eleva o Trigger a 1 com dalay de 10ms
+		ldr r2,=DR
+		ldr r3, [r2]
+		mov r5, #2                       @ eleva tigger a 1 0x2 = 10 coloca o valor do sonar_id                                     
+		orr r3, r3, r5                   @ Guarda em r3 o valor do sinal a ser enviado à placa;
+		str r3, [r2]                     @salva a velocidade no registrador;
+
+		@eleva o Trigger a 0
+		ldr r2, =DR
+		ldr r3, [r2]          
+		ldr r6, =0xFFFFFFFD            
+		and r3, r3, r6                   @ é zerado, e o novo mapa é guardado em r4
+		str r3, [r2]                     @salva a velocidade no registrador;
+
+		@verifica a flag
+		mov r4, #0x1                     @mascara para zerar a esquerda
+		flag:
+			ldr r2, =DR
+			ldr r1, [r2]
+			and r5, r1, r4
+			cmp r5, #1
+			bne flag                     @loop enquanto flag nao é 1
+          
+		@pegando a distancia
+		ldr r3, [r2]
+		mov r4, r3, lsr #6               @ignora o mux, tigger e flag
+		ldr r6,=0xFFF			         @ zerar a esquerda   
+		and r0, r4, r6
+		ldmfd sp!, {r4-r11, lr}
+		movs pc,lr              
+                  
+	get_time:
+		stmfd sp!, {r4-r11, lr}
+		stmfd sp!, {lr}
+		msr  CPSR_c, #0x13
+
+		ldr r1, =Timer
+		ldr r0, [r1]
+
+		ldmfd sp!, {r4-r11, lr}
+		movs pc,lr 
+
+	set_time:
+		stmfd sp!, {r4-r11, lr}
+		stmfd sp!, {lr}
+		msr  CPSR_c, #0x13
+
+		ldr r1, =Timer
+		str r0, [r1]
+
+		ldmfd sp!, {r4-r11, lr}
+		movs pc,lr 
+
+	add_alarm:
+		stmfd sp!, {r4-r11,lr}
+		msr  CPSR_c, #0x13
+
+		@r0 possui o endereço de uma função
+		@r1 possui o tempo que deve ser chamado
+
+		ldr r3, =Timer
+		ldr r3, [r3]
+		@carrego em r3 o valor do Timer
+		ldr r4, =Alarmes
+		@endereço inicial dos Alarmes
+		ldr r5, =NumAlarmes
+		ldr r5, [r5]
+		@carrego em r5 o número de Alarmes
+		cmp r5, #MAX_ALARMES            @Verifico a quantidade de alarmes 
+		bls Testa_tempo
+
+		mov r0, #-1
+		ldmfd sp!, {r4-r11, lr}
+		movs pc,lr       
+
+		Testa_tempo:					@adicionar um bit para verificar se o alarme foi ou não ativado;
+			cmp r1,r3                   @tempo do alarme é maior que o tempo de sistema
+			bhi adicionaAlarme
+
+			mov r0, #-2
+			ldmfd sp!, {r4-r11, lr}
+			movs pc,lr 
+        
+		adicionaAlarme:
+			mov r9, r5
+			ldr r6, [r4]    
+			cmp r6, #0
+			beq novo_alarme     
+			add r4,r4,#12
+			sub r9,r9,#1
+			cmp r9,#0
+			bhi adicionaAlarme
+
+		novo_alarme:
+			add r5,r5,#1
+			ldr r3,=NumAlarmes
+			str r5, [r3]
+			mov r9,#1
+			str r9, [r4]            @salva o valor de verificação
+			add r4,r4, #4
+			str r1, [r4]            @salva o tempo na dada posição do vetor
+			add r4,r4, #4
+			str r0, [r4]            @salva a função na dada posição do vetor                
+			ldmfd sp!, {r4-r11, lr}
+			movs pc,lr 
+
+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ Data @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+.data
+.org 0xFFF
+
+Timer:
+	.word 0
+    
+NumAlarmes:
+	.word 0
+
+.align 4
+
+Alarmes:
+	.skip 204       @alocando 204 bytes de memória -> (4 + 4 + 4)-> ativo ou não -> tempo, endereço da função a ser chamada
+    
+PILHA_SUDO:
+	.skip 1000
+    
+PILHA_IRQ:
+	.skip 1000
+    
+PILHA_USER:
+	.skip 1000
