@@ -18,14 +18,14 @@ void _start(void)
 		{
 			if(distances[3] > distances[4])
 			{
-				set_motor_speed(1,12);
+				set_motor_speed(1,0);
 				set_motor_speed(0,25);
 			}
 			else
 			{
 				if(distances[4] > distances[3])
 				{
-					set_motor_speed(0,12);
+					set_motor_speed(0,0);
 					set_motor_speed(1,25);
 				}
 				else
@@ -34,12 +34,12 @@ void _start(void)
 					distances[0] = read_sonar(0);
 					if(distances[0] > distances[7])		/*verifica lado mais espaçoso*/
 					{
-						set_motor_speed(1,12);
+						set_motor_speed(1,0);
 						set_motor_speed(0,25);
 					}
 					else
 					{
-						set_motor_speed(0,12);
+						set_motor_speed(0,0);
 						set_motor_speed(1,25);  
 					}
 				} 
