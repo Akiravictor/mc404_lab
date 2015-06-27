@@ -329,7 +329,7 @@ sudo:
 			lsl r1,r7
 			orr  r3,r4,r1                 @ Guarda em r3 o valor do sinal a ser enviado à placa;
 			ldr r2, =DR
-			str r3, [r2]                  @salva a velocidade no registrador;
+			str r3, [r2]                  @ salva a velocidade no registrador;
 			ldmfd sp!, {r4-r11}
 			movs pc,lr       
         
