@@ -333,7 +333,7 @@ sudo:
 			ldmfd sp!, {r4-r11}
 			movs pc,lr       
         
-	motors_speed:
+	set_motors_speed:
 		stmfd sp!, {r4-r11,lr}
 		msr  CPSR_c, #0x13
 		
