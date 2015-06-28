@@ -4,7 +4,7 @@
 	.global set_motors_speed
 	.global read_sonar
 	.global read_sonars
-	.global add_alarm
+	.global set_alarm
 	.global get_time
 	.global set_time
    
@@ -103,7 +103,7 @@ read_sonars:
 @@			SYSTEM			@@
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-    add_alarm:
+    set_alarm:
         stmfd sp!, {r4-r6, r10-r11, lr}
         mov r7, #13
         svc 0x0

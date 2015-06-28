@@ -66,7 +66,7 @@ void read_sonars(unsigned int *distances);
  * Returns:
  *   void
  */
-void add_alarm(void (*f)(), unsigned int time);
+void set_alarm(void (*f)(), unsigned int time);
 
 /* 
  * Reads the system time.

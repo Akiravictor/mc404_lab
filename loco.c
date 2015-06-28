@@ -6,7 +6,7 @@ void _start(void)
 {
 	unsigned int distances[16];
 	int    n=0, cont=0;
-	add_alarm(danca,1);
+	set_alarm(danca,1);
 	/*não bater - corrida*/
 	while(1)
 	{

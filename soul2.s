@@ -104,7 +104,7 @@ RESET_HANDLER:
 	ldr r1,=DR
 	ldr r3,[r1]
 
-@Inicializa o Vetor do add_alarm
+@Inicializa o Vetor do set_alarm
 	ldr r1, =Alarmes
 	mov r2, #tamanho_vetor
 
@@ -287,7 +287,7 @@ SYS_CALL:
 	beq set_time
 
 	cmp r7, #13
-	beq add_alarm
+	beq set_alarm
 
 	movs pc,lr
 
@@ -420,7 +420,7 @@ sudo:
 		ldmfd sp!, {r4-r11, lr}
 		movs pc,lr 
 
-	add_alarm:
+	set_alarm:
 		stmfd sp!, {r4-r11,lr}
 		msr  CPSR_c, #0x13
 
